@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  # MongoDB Database
+  mongodb:
+    image: mongo:7.0
+    container_name: viperpay-db
+    restart: unless-stopped
+    volumes:
+      - viperpay_mongodb_data:/data/db
+    networks:
+      - viperpay-net
+    healthcheck:
+      test: [\"CMD\", \"mongosh\", \"--eval\", \"db.adminCommand('ping')\"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # FastAPI Backend
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: viperpay-backend
+    restart: unless-stopped
+    environment:
+      - MONGO_URL=mongodb://mongodb:27017
+      - DB_NAME=viperpay
+      - CORS_ORIGINS=*
+      - JWT_SECRET=a9f8d7e6c5b4a3928170f6e5d4c3b2a190887766554433221100ffeeddccbbaa
+      - ADMIN_EMAIL=admin@example.com
+      - ADMIN_PASSWORD=admin123
+      - FRONTEND_URL=http://localhost
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - viperpay-net
+
+  # React Frontend + Nginx
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - REACT_APP_BACKEND_URL=
+    container_name: viperpay-frontend
+    restart: unless-stopped
+    ports:
+      - \"80:80\"
+    depends_on:
+      - backend
+    networks:
+      - viperpay-net
+
+volumes:
+  viperpay_mongodb_data:
+
+networks:
+  viperpay-net:
+    driver: bridge
