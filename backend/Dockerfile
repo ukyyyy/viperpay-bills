@@ -1,4 +1,4 @@
-"# ViperPay Backend Dockerfile
+# ViperPay Backend Dockerfile
 FROM python:3.11-slim
 
 WORKDIR /app
@@ -27,4 +27,3 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
 
 # Run the application
 CMD [\"uvicorn\", \"server:app\", \"--host\", \"0.0.0.0\", \"--port\", \"8001\"]
-"
